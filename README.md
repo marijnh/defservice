@@ -1,7 +1,7 @@
-* URL dispatching macro system
+# URL dispatching macro system
 
-See http://marijn.haverbeke.nl/defservice/ for the notes to a talk I
-gave about this.
+See [http://marijn.haverbeke.nl/defservice/](http://marijn.haverbeke.nl/defservice/)
+for the notes to a talk I gave about this.
 
 Read through `test.lisp` to get a feel of how the system is used.
 
