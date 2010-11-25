@@ -1,5 +1,5 @@
 (defpackage :defservice
-  (:use :cl)
+  (:use :cl :url-encode)
   (:export #:make-start-context #:defservice #:defcontext #:allow-empty-resource-name
            #:dispatch-request #:go-on
            #:url-encode #:url-decode
@@ -23,40 +23,6 @@
          :headers `(("location" . ,location))))
 
 (defun ensure-list (x) (if (listp x) x (list x)))
-
-(defun url-encode (string &optional (to-escape "\"#$%&+,/:;<=>?@"))
-  (declare (optimize speed (safety 0)))
-  (let ((size (loop :for ch :across string :for code := (char-code ch) :sum
-                 (cond ((> code 127) (* (trivial-utf-8:char-utf-8-byte-length ch) 3))
-                       ((or (< code 33) (find ch to-escape)) 3)
-                       (t 1)))))
-    (if (= size (length string))
-        string
-        (let ((out (make-string size)) (pos 0))
-          (macrolet ((wr (ch) `(progn (setf (schar out pos) ,ch) (incf pos))))
-            (flet ((code-out (ch)
-                     (multiple-value-bind (hi lo) (floor (char-code ch) 16)
-                       (wr #\%) (wr (digit-char hi)) (wr (digit-char lo)))))
-              (loop :for ch :across string :for code := (char-code ch) :do
-                 (cond ((> code 127) (trivial-utf-8::as-utf-8-bytes ch code-out))
-                       ((or (< code 33) (find ch to-escape)) (code-out ch))
-                       (t (wr ch))))))
-          out))))
-
-(defun url-decode (string)
-  (declare (optimize speed (safety 0)))
-  (let ((bytes (make-array (length string) :element-type '(unsigned-byte 8))))
-    (with-input-from-string (in string)
-      (loop :for pos :from 0 :for ch := (read-char in nil nil) :while ch :do
-         (setf (aref bytes pos)
-               (case ch
-                 (#\+ #.(char-code #\space))
-                 (#\% (let ((big (digit-char-p (read-char in) 16))
-                            (small (digit-char-p (read-char in) 16)))
-                        (unless (and big small) (error "Junk in URL."))
-                        (+ small (* 16 big))))
-                 (t (char-code ch))))
-         :finally (return (trivial-utf-8:utf-8-bytes-to-string bytes :end pos))))))
 
 (defun method-pos (method)
   (case method (:get 0) (:head 0) (:post 1) (:put 2) (:delete 3)))

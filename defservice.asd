@@ -1,3 +1,3 @@
 (defsystem :defservice
-  :components ((:file "trivial-utf-8")
-               (:file "defservice" :depends-on ("trivial-utf-8"))))
+  :components ((:file "url-encode")
+               (:file "defservice" :depends-on ("url-encode"))))
